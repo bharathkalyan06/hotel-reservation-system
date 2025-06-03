@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Grand Hotel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="display-6 fw-bold mb-4">
+            <i class="fas fa-cog me-2"></i>Admin Dashboard
+        </h2>
+    </div>
+</div>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if not active_tab or active_tab == 'dashboard' else '' }}" 
+           href="{{ url_for('admin_dashboard') }}">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_tab == 'rooms' else '' }}" 
+           href="{{ url_for('admin_rooms') }}">
+            <i class="fas fa-bed me-2"></i>Rooms
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_tab == 'add_room' else '' }}" 
+           href="{{ url_for('admin_add_room') }}">
+            <i class="fas fa-plus me-2"></i>Add Room
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_tab == 'bookings' else '' }}" 
+           href="{{ url_for('admin_bookings') }}">
+            <i class="fas fa-calendar-check me-2"></i>Bookings
+        </a>
+    </li>
+</ul>
+
+<!-- Dashboard Overview -->
+{% if not active_tab or active_tab == 'dashboard' %}
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-bed fa-2x text-primary mb-3"></i>
+                <h3 class="card-title">{{ total_rooms }}</h3>
+                <p class="card-text text-muted">Total Rooms</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                <h3 class="card-title">{{ available_rooms }}</h3>
+                <p class="card-text text-muted">Available Rooms</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check fa-2x text-info mb-3"></i>
+                <h3 class="card-title">{{ total_bookings }}</h3>
+                <p class="card-text text-muted">Total Bookings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x text-warning mb-3"></i>
+                <h3 class="card-title">{{ active_bookings }}</h3>
+                <p class="card-text text-muted">Active Bookings</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Bookings -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Bookings
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Guest</th>
+                                    <th>Room</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr>
+                                    <td><code>{{ booking.booking_reference }}</code></td>
+                                    <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
+                                    <td>{{ booking.room.room_number }} ({{ booking.room.room_type }})</td>
+                                    <td>{{ booking.check_in.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ booking.check_out.strftime('%b %d, %Y') }}</td>
+                                    <td>
+                                        {% if booking.status == 'confirmed' %}
+                                            <span class="badge bg-success">Confirmed</span>
+                                        {% elif booking.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ booking.status.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>${{ "%.2f"|format(booking.total_amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent bookings found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Rooms Management -->
+{% if active_tab == 'rooms' %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bed me-2"></i>Room Management
+                </h5>
+                <a href="{{ url_for('admin_add_room') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Room
+                </a>
+            </div>
+            <div class="card-body">
+                {% if rooms %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Room Number</th>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Capacity</th>
+                                    <th>Available</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                <tr>
+                                    <td><strong>{{ room.room_number }}</strong></td>
+                                    <td>{{ room.room_type }}</td>
+                                    <td>₹{{ "%.0f"|format(room.price) }}/night</td>
+                                    <td>{{ room.capacity }} guests</td>
+                                    <td>
+                                        {% if room.is_available %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Not Available</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No rooms found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Add Room Form -->
+{% if active_tab == 'add_room' %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>Add New Room
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.room_number.label(class="form-label") }}
+                            {{ form.room_number(class="form-control" + (" is-invalid" if form.room_number.errors else "")) }}
+                            {% if form.room_number.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.room_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.room_type.label(class="form-label") }}
+                            {{ form.room_type(class="form-control" + (" is-invalid" if form.room_type.errors else "")) }}
+                            {% if form.room_type.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.room_type.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.price.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else "")) }}
+                            </div>
+                            {% if form.price.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.price.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.capacity.label(class="form-label") }}
+                            {{ form.capacity(class="form-control" + (" is-invalid" if form.capacity.errors else "")) }}
+                            {% if form.capacity.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.capacity.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.amenities.label(class="form-label") }}
+                        {{ form.amenities(class="form-control", rows="3", placeholder="Free WiFi\nAir Conditioning\nMini Bar\nFlat Screen TV") }}
+                        <div class="form-text">Enter one amenity per line.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_available(class="form-check-input") }}
+                            {{ form.is_available.label(class="form-check-label") }}
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Add Room
+                    </button>
+                    <a href="{{ url_for('admin_rooms') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- All Bookings -->
+{% if active_tab == 'bookings' %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-check me-2"></i>All Bookings
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Guest</th>
+                                    <th>Room</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Guests</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                    <th>Booked On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td><code>{{ booking.booking_reference }}</code></td>
+                                    <td>
+                                        {{ booking.user.first_name }} {{ booking.user.last_name }}
+                                        <br><small class="text-muted">{{ booking.user.email }}</small>
+                                    </td>
+                                    <td>{{ booking.room.room_number }} ({{ booking.room.room_type }})</td>
+                                    <td>{{ booking.check_in.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ booking.check_out.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ booking.guests }}</td>
+                                    <td>
+                                        {% if booking.status == 'confirmed' %}
+                                            <span class="badge bg-success">Confirmed</span>
+                                        {% elif booking.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        {% elif booking.status == 'checked_in' %}
+                                            <span class="badge bg-info">Checked In</span>
+                                        {% elif booking.status == 'checked_out' %}
+                                            <span class="badge bg-secondary">Checked Out</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ booking.status.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>${{ "%.2f"|format(booking.total_amount) }}</td>
+                                    <td>{{ booking.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No bookings found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

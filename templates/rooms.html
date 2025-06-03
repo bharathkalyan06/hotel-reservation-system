@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Rooms - Grand Hotel{% endblock %}
+
+{% block content %}
+<!-- Search Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>Search Rooms
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            {{ search_form.check_in.label(class="form-label") }}
+                            {{ search_form.check_in(class="form-control") }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            {{ search_form.check_out.label(class="form-label") }}
+                            {{ search_form.check_out(class="form-control") }}
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            {{ search_form.guests.label(class="form-label") }}
+                            {{ search_form.guests(class="form-control") }}
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            {{ search_form.room_type.label(class="form-label") }}
+                            {{ search_form.room_type(class="form-control") }}
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="display-6 fw-bold">
+            Available Rooms
+            <span class="badge bg-secondary ms-2">{{ rooms|length }} rooms</span>
+        </h2>
+        {% if request.args.get('check_in') and request.args.get('check_out') %}
+            <p class="lead">
+                <i class="fas fa-calendar me-2"></i>
+                {{ request.args.get('check_in') }} to {{ request.args.get('check_out') }}
+                {% if request.args.get('guests') %}
+                    <i class="fas fa-users ms-3 me-2"></i>{{ request.args.get('guests') }} guests
+                {% endif %}
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Rooms Grid -->
+{% if rooms %}
+    <div class="row g-4">
+        {% for room in rooms %}
+        <div class="col-lg-6 col-xl-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title">{{ room.room_type }} Room</h5>
+                            <h6 class="text-muted">Room {{ room.room_number }}</h6>
+                        </div>
+                        <div class="text-end">
+                            <div class="h4 mb-0 text-primary">₹{{ "%.0f"|format(room.price) }}</div>
+                            <small class="text-muted">per night</small>
+                        </div>
+                    </div>
+                    
+                    <p class="card-text">{{ room.description }}</p>
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col">
+                            <div class="border rounded p-2">
+                                <i class="fas fa-users text-primary mb-1"></i>
+                                <div class="small">{{ room.capacity }} Guests</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="border rounded p-2">
+                                <i class="fas fa-bed text-primary mb-1"></i>
+                                <div class="small">{{ room.room_type }}</div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="border rounded p-2">
+                                <i class="fas fa-wifi text-primary mb-1"></i>
+                                <div class="small">Free WiFi</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if room.amenities %}
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Amenities:</h6>
+                            <div class="small text-muted">{{ room.amenities }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer">
+                    {% if current_user.is_authenticated %}
+                        {% set book_url = url_for('book_room', room_id=room.id) %}
+                        {% if request.args.get('check_in') and request.args.get('check_out') %}
+                            {% set book_url = url_for('book_room', room_id=room.id, 
+                                                     check_in=request.args.get('check_in'),
+                                                     check_out=request.args.get('check_out'),
+                                                     guests=request.args.get('guests', 1)) %}
+                        {% endif %}
+                        <a href="{{ book_url }}" class="btn btn-primary w-100">
+                            <i class="fas fa-calendar-plus me-2"></i>Book Now
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login to Book
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-bed fa-3x text-muted mb-3"></i>
+        <h3>No rooms available</h3>
+        <p class="text-muted">No rooms match your search criteria. Please try different dates or requirements.</p>
+        <a href="{{ url_for('rooms') }}" class="btn btn-primary">
+            <i class="fas fa-refresh me-2"></i>View All Rooms
+        </a>
+    </div>
+{% endif %}
+
+<!-- Room Types Info -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3 class="fw-bold mb-4">Room Types</h3>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-bed fa-2x text-primary mb-3"></i>
+                <h5>Standard Room</h5>
+                <p class="small text-muted">Comfortable accommodation with essential amenities for a pleasant stay.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-star fa-2x text-primary mb-3"></i>
+                <h5>Deluxe Room</h5>
+                <p class="small text-muted">Spacious rooms with premium amenities and enhanced comfort features.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-crown fa-2x text-primary mb-3"></i>
+                <h5>Suite</h5>
+                <p class="small text-muted">Luxury accommodation with separate living areas and exclusive amenities.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set minimum dates
+        const today = new Date().toISOString().split('T')[0];
+        const checkInInput = document.querySelector('input[name="check_in"]');
+        const checkOutInput = document.querySelector('input[name="check_out"]');
+        
+        if (checkInInput) {
+            checkInInput.min = today;
+        }
+        
+        if (checkOutInput) {
+            checkOutInput.min = today;
+        }
+        
+        // Update check-out minimum when check-in changes
+        if (checkInInput && checkOutInput) {
+            checkInInput.addEventListener('change', function() {
+                const checkInDate = new Date(this.value);
+                checkInDate.setDate(checkInDate.getDate() + 1);
+                checkOutInput.min = checkInDate.toISOString().split('T')[0];
+                
+                if (checkOutInput.value && new Date(checkOutInput.value) <= new Date(this.value)) {
+                    checkOutInput.value = checkInDate.toISOString().split('T')[0];
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

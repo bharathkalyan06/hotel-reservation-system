@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Grand Hotel{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <i class="fas fa-server fa-4x text-danger mb-4"></i>
+            <h1 class="display-4">500</h1>
+            <h2 class="mb-3">Internal Server Error</h2>
+            <p class="lead mb-4">
+                Something went wrong on our end. Our team has been notified and we're working to fix it.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Go Home
+                </a>
+                <button onclick="window.location.reload()" class="btn btn-outline-primary">
+                    <i class="fas fa-refresh me-2"></i>Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

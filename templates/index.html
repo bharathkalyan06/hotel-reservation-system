@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="row align-items-center min-vh-100">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">
+                Welcome to <span class="text-primary">Grand Hotel</span>
+            </h1>
+            <p class="lead mb-4">
+                Experience luxury and comfort in the heart of the city. Our premium rooms and exceptional service ensure your stay is unforgettable.
+            </p>
+            <div class="d-flex gap-3">
+                <a href="{{ url_for('rooms') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-bed me-2"></i>View Rooms
+                </a>
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Sign Up
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>Find Your Perfect Room
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('rooms') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ search_form.check_in.label(class="form-label") }}
+                                {{ search_form.check_in(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ search_form.check_out.label(class="form-label") }}
+                                {{ search_form.check_out(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ search_form.guests.label(class="form-label") }}
+                                {{ search_form.guests(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ search_form.room_type.label(class="form-label") }}
+                                {{ search_form.room_type(class="form-control") }}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Search Rooms
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="display-5 fw-bold">Why Choose Grand Hotel?</h2>
+            <p class="lead">Discover the amenities that make us special</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-wifi fa-3x text-primary"></i>
+                </div>
+                <h4>Free Wi-Fi</h4>
+                <p>Stay connected with complimentary high-speed internet in all rooms and common areas.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-swimming-pool fa-3x text-primary"></i>
+                </div>
+                <h4>Swimming Pool</h4>
+                <p>Relax in our outdoor pool with stunning city views, open 24/7 for your convenience.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-concierge-bell fa-3x text-primary"></i>
+                </div>
+                <h4>24/7 Service</h4>
+                <p>Our dedicated staff is available around the clock to assist with all your needs.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Rooms Section -->
+{% if featured_rooms %}
+<section class="py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="display-5 fw-bold">Featured Rooms</h2>
+            <p class="lead">Experience comfort and luxury in our premium accommodations</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        {% for room in featured_rooms %}
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title">{{ room.room_type }} Room</h5>
+                        <span class="badge bg-primary fs-6">₹{{ "%.0f"|format(room.price) }}/night</span>
+                    </div>
+                    <h6 class="text-muted mb-3">Room {{ room.room_number }}</h6>
+                    <p class="card-text">{{ room.description }}</p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-users me-1"></i>Up to {{ room.capacity }} guests
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('rooms') }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-eye me-2"></i>View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('rooms') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-bed me-2"></i>View All Rooms
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<!-- Call to Action -->
+<section class="py-5 bg-primary text-white rounded">
+    <div class="text-center">
+        <h2 class="display-5 fw-bold mb-3">Ready to Book?</h2>
+        <p class="lead mb-4">Join thousands of satisfied guests who have made Grand Hotel their home away from home.</p>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('rooms') }}" class="btn btn-light btn-lg">
+                <i class="fas fa-calendar-plus me-2"></i>Book Now
+            </a>
+        {% else %}
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Set minimum date for date inputs to today
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        const checkInInput = document.querySelector('input[name="check_in"]');
+        const checkOutInput = document.querySelector('input[name="check_out"]');
+        
+        if (checkInInput) {
+            checkInInput.min = today;
+        }
+        
+        if (checkOutInput) {
+            checkOutInput.min = today;
+        }
+        
+        // Update check-out minimum when check-in changes
+        if (checkInInput && checkOutInput) {
+            checkInInput.addEventListener('change', function() {
+                const checkInDate = new Date(this.value);
+                checkInDate.setDate(checkInDate.getDate() + 1);
+                checkOutInput.min = checkInDate.toISOString().split('T')[0];
+                
+                // If check-out is before new minimum, update it
+                if (checkOutInput.value && new Date(checkOutInput.value) <= new Date(this.value)) {
+                    checkOutInput.value = checkInDate.toISOString().split('T')[0];
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

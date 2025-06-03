@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Book Room {{ room.room_number }} - Grand Hotel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Room Details -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-bed me-2"></i>{{ room.room_type }} Room {{ room.room_number }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h5 class="text-primary">₹{{ "%.0f"|format(room.price) }} <small class="text-muted">per night</small></h5>
+                </div>
+                
+                <p class="mb-3">{{ room.description }}</p>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <i class="fas fa-users text-primary mb-1"></i>
+                            <div class="small">{{ room.capacity }} Guests</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <i class="fas fa-bed text-primary mb-1"></i>
+                            <div class="small">{{ room.room_type }}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <i class="fas fa-wifi text-primary mb-1"></i>
+                            <div class="small">Free WiFi</div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if room.amenities %}
+                <div class="mb-3">
+                    <h6 class="fw-bold">Amenities:</h6>
+                    <p class="small text-muted">{{ room.amenities }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Policies -->
+                <div class="border rounded p-3 bg-light">
+                    <h6 class="fw-bold mb-2">
+                        <i class="fas fa-info-circle me-2"></i>Booking Policies
+                    </h6>
+                    <ul class="small mb-0">
+                        <li>Check-in: 3:00 PM</li>
+                        <li>Check-out: 11:00 AM</li>
+                        <li>Free cancellation up to 24 hours before check-in</li>
+                        <li>No smoking in rooms</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Form -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>Complete Your Booking
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="bookingForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.check_in.label(class="form-label") }}
+                            {{ form.check_in(class="form-control" + (" is-invalid" if form.check_in.errors else "")) }}
+                            {% if form.check_in.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.check_in.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.check_out.label(class="form-label") }}
+                            {{ form.check_out(class="form-control" + (" is-invalid" if form.check_out.errors else "")) }}
+                            {% if form.check_out.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.check_out.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.guests.label(class="form-label") }}
+                        {{ form.guests(class="form-control" + (" is-invalid" if form.guests.errors else ""), max=room.capacity) }}
+                        {% if form.guests.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.guests.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Maximum {{ room.capacity }} guests allowed for this room.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.special_requests.label(class="form-label") }}
+                        {{ form.special_requests(class="form-control", rows="3", placeholder="Any special requests or requirements...") }}
+                    </div>
+                    
+                    <!-- Booking Summary -->
+                    <div class="card bg-light mb-3" id="bookingSummary" style="display: none;">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-calculator me-2"></i>Booking Summary
+                            </h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Room Rate:</small>
+                                    <div>₹{{ "%.0f"|format(room.price) }}/night</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Number of Nights:</small>
+                                    <div id="nightsCount">-</div>
+                                </div>
+                            </div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between">
+                                <strong>Total Amount:</strong>
+                                <strong id="totalAmount" class="text-primary">₹0</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">
+                        <i class="fas fa-credit-card me-2"></i>Confirm Booking
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Guest Information -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-user me-2"></i>Guest Information
+                </h6>
+                <p class="mb-1"><strong>Name:</strong> {{ current_user.first_name }} {{ current_user.last_name }}</p>
+                <p class="mb-1"><strong>Email:</strong> {{ current_user.email }}</p>
+                {% if current_user.phone %}
+                    <p class="mb-0"><strong>Phone:</strong> {{ current_user.phone }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkInInput = document.querySelector('input[name="check_in"]');
+        const checkOutInput = document.querySelector('input[name="check_out"]');
+        const guestsInput = document.querySelector('input[name="guests"]');
+        const bookingSummary = document.getElementById('bookingSummary');
+        const nightsCount = document.getElementById('nightsCount');
+        const totalAmount = document.getElementById('totalAmount');
+        const roomPrice = {{ room.price }};
+        
+        // Set minimum dates
+        const today = new Date().toISOString().split('T')[0];
+        checkInInput.min = today;
+        checkOutInput.min = today;
+        
+        function updateBookingSummary() {
+            const checkIn = new Date(checkInInput.value);
+            const checkOut = new Date(checkOutInput.value);
+            
+            if (checkInInput.value && checkOutInput.value && checkOut > checkIn) {
+                const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                const total = nights * roomPrice;
+                
+                nightsCount.textContent = nights;
+                totalAmount.textContent = '₹' + total.toFixed(0);
+                bookingSummary.style.display = 'block';
+            } else {
+                bookingSummary.style.display = 'none';
+            }
+        }
+        
+        // Update check-out minimum when check-in changes
+        checkInInput.addEventListener('change', function() {
+            const checkInDate = new Date(this.value);
+            checkInDate.setDate(checkInDate.getDate() + 1);
+            checkOutInput.min = checkInDate.toISOString().split('T')[0];
+            
+            if (checkOutInput.value && new Date(checkOutInput.value) <= new Date(this.value)) {
+                checkOutInput.value = checkInDate.toISOString().split('T')[0];
+            }
+            
+            updateBookingSummary();
+        });
+        
+        checkOutInput.addEventListener('change', updateBookingSummary);
+        
+        // Initial calculation if dates are pre-filled
+        if (checkInInput.value && checkOutInput.value) {
+            updateBookingSummary();
+        }
+        
+        // Form validation
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            const guests = parseInt(guestsInput.value);
+            const maxCapacity = {{ room.capacity }};
+            
+            if (guests > maxCapacity) {
+                e.preventDefault();
+                alert(`This room can accommodate a maximum of ${maxCapacity} guests.`);
+                guestsInput.focus();
+                return false;
+            }
+            
+            if (!checkInInput.value || !checkOutInput.value) {
+                e.preventDefault();
+                alert('Please select check-in and check-out dates.');
+                return false;
+            }
+            
+            const checkIn = new Date(checkInInput.value);
+            const checkOut = new Date(checkOutInput.value);
+            
+            if (checkOut <= checkIn) {
+                e.preventDefault();
+                alert('Check-out date must be after check-in date.');
+                checkOutInput.focus();
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

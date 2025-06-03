@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - Grand Hotel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="display-6 fw-bold">
+                <i class="fas fa-calendar-check me-2"></i>My Bookings
+            </h2>
+            <a href="{{ url_for('rooms') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>New Booking
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if bookings %}
+    <div class="row g-4">
+        {% for booking in bookings %}
+        <div class="col-lg-6 col-xl-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">{{ booking.booking_reference }}</h6>
+                    {% if booking.status == 'confirmed' %}
+                        <span class="badge bg-success">{{ booking.status.title() }}</span>
+                    {% elif booking.status == 'cancelled' %}
+                        <span class="badge bg-danger">{{ booking.status.title() }}</span>
+                    {% elif booking.status == 'checked_in' %}
+                        <span class="badge bg-info">Checked In</span>
+                    {% elif booking.status == 'checked_out' %}
+                        <span class="badge bg-secondary">Checked Out</span>
+                    {% else %}
+                        <span class="badge bg-warning">{{ booking.status.title() }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ booking.room.room_type }} Room {{ booking.room.room_number }}
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border rounded p-2">
+                                    <i class="fas fa-calendar-alt text-primary mb-1"></i>
+                                    <div class="small">Check-in</div>
+                                    <div class="fw-bold">{{ booking.check_in.strftime('%b %d, %Y') }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-2">
+                                    <i class="fas fa-calendar-alt text-primary mb-1"></i>
+                                    <div class="small">Check-out</div>
+                                    <div class="fw-bold">{{ booking.check_out.strftime('%b %d, %Y') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <small class="text-muted">Guests:</small>
+                            <div><i class="fas fa-users me-1"></i>{{ booking.guests }}</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Nights:</small>
+                            <div><i class="fas fa-moon me-1"></i>{{ booking.nights }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">Total Amount:</span>
+                        <span class="h5 text-primary mb-0">₹{{ "%.2f"|format(booking.total_amount) }}</span>
+                    </div>
+                    
+                    {% if booking.special_requests %}
+                        <div class="mb-3">
+                            <small class="text-muted">Special Requests:</small>
+                            <div class="small">{{ booking.special_requests }}</div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="text-muted small">
+                        <i class="fas fa-clock me-1"></i>Booked on {{ booking.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('download_invoice', booking_id=booking.id) }}" 
+                           class="btn btn-outline-primary btn-sm flex-fill">
+                            <i class="fas fa-download me-1"></i>Invoice
+                        </a>
+                        
+                        {% if booking.status == 'confirmed' and booking.check_in > date.today() %}
+                            <a href="{{ url_for('cancel_booking', booking_id=booking.id) }}" 
+                               class="btn btn-outline-danger btn-sm flex-fill"
+                               onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.')">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Booking Summary -->
+    <div class="row mt-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-bar fa-2x text-primary mb-3"></i>
+                    <h5>Booking Summary</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="h4">{{ bookings|selectattr('status', 'equalto', 'confirmed')|list|length }}</div>
+                            <small class="text-muted">Active</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4">{{ bookings|length }}</div>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+{% else %}
+    <!-- No Bookings -->
+    <div class="text-center py-5">
+        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+        <h3>No bookings yet</h3>
+        <p class="text-muted mb-4">You haven't made any reservations. Start planning your perfect getaway!</p>
+        <a href="{{ url_for('rooms') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-bed me-2"></i>Browse Rooms
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Add current date to template context for comparison in Jinja2
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add confirmation for cancellation
+        const cancelButtons = document.querySelectorAll('a[href*="cancel-booking"]');
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
